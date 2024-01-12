@@ -6,9 +6,10 @@ import (
 	"log/slog"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/wzshiming/diff-commit/prompts"
-	"github.com/wzshiming/diff-commit/gpt"
+	"github.com/wzshiming/gh-gpt/pkg/run"
 )
 
 func usage() {
@@ -44,23 +45,26 @@ func main() {
 		usage()
 	}
 
-	summary, err := gpt.Generate(ctx, prompts.SummarizeFileDiff(string(patch)))
+	summary, err := run.Run(ctx, prompts.SummarizeFileDiff(string(patch)))
 	if err != nil {
 		slog.Error("summarize file diff", "err", err)
 		os.Exit(1)
 	}
+	summary = strings.TrimSpace(summary)
 
-	title, err := gpt.Generate(ctx, prompts.SummarizeTitle(summary))
+	title, err := run.Run(ctx, prompts.SummarizeTitle(summary))
 	if err != nil {
 		slog.Error("summarize title", "err", err)
 		os.Exit(1)
 	}
+	title = strings.TrimSpace(title)
 
-	kind, err := gpt.Generate(ctx, prompts.ConventionalCommit(summary))
+	kind, err := run.Run(ctx, prompts.ConventionalCommit(summary))
 	if err != nil {
 		slog.Error("conventional commit", "err", err)
 		os.Exit(1)
 	}
+	kind = strings.TrimSpace(kind)
 
 	fmt.Printf("%s: %s\n\n%s\n", kind, title, summary)
 }
